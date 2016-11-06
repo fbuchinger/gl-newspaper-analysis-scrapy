@@ -13,5 +13,4 @@ class DmozItem(scrapy.Item):
     desc = scrapy.Field()
     
 class NewspaperItem(scrapy.Item):
-    title = scrapy.Field()
-    screenshot = scrapy.Field()
+    pass
