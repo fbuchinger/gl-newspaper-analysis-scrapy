@@ -14,15 +14,20 @@ lua_script = """
         splash:go(splash.args.url)
         local measure_layout = splash:jsfunc([[
             function measureLayout() {
-                jQuery('#wm-ipp-inside').find('a[href="#close"]').trigger('click');
-                var measurements = jQuery('body').layoutstats('getUniqueFontStyles');
-                measurements._id = location.href;
-                measurements.ISOTimeStamp = (new Date).toISOString();
-                if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
-                    return measurements;
+                try {
+                    jQuery('#wm-ipp-inside').find('a[href="#close"]').trigger('click');
+                    var measurements = jQuery('body').layoutstats('getUniqueFontStyles');
+                    measurements.snapshotURL = location.href;
+                    measurements.ISOTimeStamp = (new Date).toISOString();
+                    if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
+                        return measurements;
+                    }
+                    else {
+                        window.setTimeout(measureLayout, 500);
+                    }
                 }
-                else {
-                    window.setTimeout(measureLayout, 500);
+                catch (err){
+                    return {snapshotURL: location.href, error: err.message}
                 }
             }
         ]])
@@ -37,7 +42,7 @@ class NewspaperSpider(scrapy.Spider):
     # start_urls = [l.strip() for l in open('urls.txt').readlines()]
     custom_settings = {
         'IA_BASEURL': 'http://web.archive.org/web',
-        'DAYS_BETWEEN_SNAPSHOTS': 365,
+        'DAYS_BETWEEN_SNAPSHOTS': 30,
         'START_DATE': '2005-01-01',
         'END_DATE': '2015-01-01',
         'NEWSPAPERS':{
@@ -61,6 +66,7 @@ class NewspaperSpider(scrapy.Spider):
         'width': 600,
         'render_all': 1,
         'wait': 10,
+        'timeout': 600,
         'lua_source': lua_script
     }
 
