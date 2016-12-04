@@ -83,7 +83,8 @@ DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'scrapy.pipelines.images.ImagesPipeline': 1,
+    'newspaper_layout.pipelines.NewspaperLayoutPipeline': 1,
+    #'scrapy.pipelines.images.ImagesPipeline': 1,
 }
 
 IMAGES_STORE = '/screenshots'
