@@ -1,6 +1,7 @@
 import json
 import base64
 from datetime import date, datetime, timedelta
+import random
 
 import scrapy
 from scrapy.shell import inspect_response
@@ -8,13 +9,17 @@ from scrapy_splash import SplashRequest
 
 lua_script = """
     function main(splash)
-        splash:autoload("https://code.jquery.com/jquery-2.1.3.min.js")
-        splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/master/src/jquery.layoutstats.js")
+        -- splash:autoload("https://code.jquery.com/jquery-2.1.3.min.js")
+        splash:autoload("https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js")
+        -- splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/master/src/jquery.layoutstats.js")
+        splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/zepto-js/src/jquery.layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
-        splash:runjs("jQLA = jQuery.noConflict(true)")
+        splash:wait(0.5)
+        -- splash:runjs("jQLA = jQuery.noConflict(true)")
 
-        ready_for_measurement = splash:jsfunc("function() { return window.jQuery !== undefined && jQuery.fn.layoutstats !== undefined }")
+        -- ready_for_measurement = splash:jsfunc("function() { return window.jQLA !== undefined && jQLA.fn.layoutstats !== undefined }")
+        ready_for_measurement = splash:jsfunc("function() { return window.Zepto !== undefined && Zepto.fn.layoutstats !== undefined }")
 
         function wait_for(condition)
             local max_retries = 10
@@ -28,9 +33,8 @@ lua_script = """
         local measure_layout = splash:jsfunc([[
             function measureLayout() {
                 try {
-                    jQLA = jQuery.noConflict(true);
-                    jQLA('#wm-ipp-inside').find('a[href="#close"]').trigger('click');
-                    var measurements = jQLA('body').layoutstats('getUniqueFontStyles');
+                    Zepto('#wm-ipp-inside').find('a[href="#close"]').trigger('click');
+                    var measurements = Zepto('body').layoutstats('getUniqueFontStyles');
                     measurements.snapshotURL = location.href;
                     measurements.ISOTimeStamp = (new Date).toISOString();
                     if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
@@ -41,8 +45,8 @@ lua_script = """
                     }
                 }
                 catch (err){
-                    var jqlaDefined = (window.jQLA && jQLA.fn && jQLA.fn.jquery);
-                    return {snapshotURL: location.href, error: err.message, jqlaDefined: jqlaDefined }
+                    //var jqlaDefined = (window.jQLA && jQLA.fn && jQLA.fn.jquery);
+                    return {snapshotURL: location.href, error: err.message }
                 }
             }
         ]])
@@ -140,6 +144,8 @@ class NewspaperSpider(scrapy.Spider):
                 datestr = snapshot_date.strftime('%Y%m%d')
                 url = '%s/%s/%s' % (self.custom_settings['IA_BASEURL'], datestr, newspaper_url)
                 urls.append(url)
+
+        random.shuffle(urls)
         return urls
 
 
