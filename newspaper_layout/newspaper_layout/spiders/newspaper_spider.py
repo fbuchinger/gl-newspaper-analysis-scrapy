@@ -9,17 +9,12 @@ from scrapy_splash import SplashRequest
 
 lua_script = """
     function main(splash)
-        -- splash:autoload("https://code.jquery.com/jquery-2.1.3.min.js")
-        splash:autoload("https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js")
-        -- splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/master/src/jquery.layoutstats.js")
-        splash:autoload("https://raw.githubusercontent.com/fbuchinger/jquery.layoutstats/zepto-js/src/jquery.layoutstats.js")
+         splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/master/src/layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
         splash:wait(0.5)
-        -- splash:runjs("jQLA = jQuery.noConflict(true)")
 
-        -- ready_for_measurement = splash:jsfunc("function() { return window.jQLA !== undefined && jQLA.fn.layoutstats !== undefined }")
-        ready_for_measurement = splash:jsfunc("function() { return window.Zepto !== undefined && Zepto.fn.layoutstats !== undefined }")
+        ready_for_measurement = splash:jsfunc("function() { return window.layoutstats !== undefined }")
 
         function wait_for(condition)
             local max_retries = 10
@@ -33,8 +28,11 @@ lua_script = """
         local measure_layout = splash:jsfunc([[
             function measureLayout() {
                 try {
-                    Zepto('#wm-ipp-inside').find('a[href="#close"]').trigger('click');
-                    var measurements = Zepto('body').layoutstats('getUniqueFontStyles');
+                    var waybackInfo = document.getElementById('wm-ipp');
+                    if(waybackInfo){
+                        waybackInfo.parentNode.removeChild(waybackInfo);
+                    }
+                    var measurements = window.layoutstats(document.body);
                     measurements.snapshotURL = location.href;
                     measurements.ISOTimeStamp = (new Date).toISOString();
                     if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
@@ -64,29 +62,32 @@ def safe_cast(val, to_type, default=None):
 
 class NewspaperSpider(scrapy.Spider):
     name = 'newspaper_ia'
-    #start_urls = ['https://web.archive.org/web/20140314230711/http://www.theguardian.com/us']
+    http_user = 'myuser'
+    http_pass = 'mypassword'
+
     custom_settings = {
         'IA_BASEURL': 'http://web.archive.org/web',
         'DAYS_BETWEEN_SNAPSHOTS': 30,
         'START_DATE': '2005-01-01',
         'END_DATE': '2015-01-01',
         #fields that should be exported in a CSV/JSON export
-        'FEED_EXPORT_FIELDS': [
-            'requested_url',
-            'snapshot_date',
-            'textTopFontColor',
-            'textTopFont',
-            'textTopFontSize',
-            'textUniqueFontSizeCount',
-            'textUniqueFontColorCount',
-            'textUniqueFontCount',
-            'textVisibleCharCount',
-            'textTopFontStyle',
-            'ISOTimeStamp',
-            'version',
-            'textFirst1000Chars',
-            'newspaper'
-        ],
+        # 'FEED_EXPORT_FIELDS': [
+        #     'requested_url',
+        #     'snapshot_date',
+        #     'textTopFontColor',
+        #     'textTopFont',
+        #     'textTopFontSize',
+        #     'textUniqueFontSizeCount',
+        #     'textUniqueFontColorCount',
+        #     'textUniqueFontCount',
+        #     'textUniqueFonts',
+        #     'textVisibleCharCount',
+        #     'textTopFontStyle',
+        #     'ISOTimeStamp',
+        #     'version',
+        #     'textFirst1000Chars',
+        #     'newspaper'
+        # ],
         'NEWSPAPERS':{
             'clarin': 'http://clarin.com',
             'presse': 'http://diepresse.com',

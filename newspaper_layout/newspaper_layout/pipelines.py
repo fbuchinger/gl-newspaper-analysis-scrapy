@@ -5,7 +5,10 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 from datetime import datetime
+import collections
+
 from scrapy.exceptions import DropItem
+from items import NewspaperItem
 
 class NewspaperLayoutPipeline(object):
     def process_item(self, item, spider):
@@ -30,5 +33,12 @@ class NewspaperLayoutPipeline(object):
             first_1k_chars = "".join(first_1k_chars.split(","))
             item['textFirst1000Chars'] = "".join(first_1k_chars.split());
 
-            return item
+            try:
+                item['textAverageFontSize'] = round(item['textAverageFontSize'],2)
+                item['textAverageRelativeLineHeight'] = round(item['textAverageRelativeLineHeight'], 2)
+            except:
+                pass
+
+            # order collections by key
+            return collections.OrderedDict(sorted(item.items()))
 
