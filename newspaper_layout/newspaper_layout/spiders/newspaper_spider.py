@@ -121,8 +121,13 @@ class NewspaperSpider(scrapy.Spider):
         self.interval_days = timedelta(days = self.snapshot_interval)
         self.start_date = datetime.strptime(self.custom_settings['START_DATE'],'%Y-%m-%d')
         self.end_date = datetime.strptime(self.custom_settings['END_DATE'],'%Y-%m-%d')
-        self.analysed_newspapers = self.custom_settings['ANAYLISED_NEWSPAPERS']
         self.newspapers = self.custom_settings['NEWSPAPERS']
+
+        #define the to-be analyzed newspapers
+        if hasattr(self,'newspaper_list'):
+               self.analysed_newspapers = self.newspaper_list.split(',')
+        else:
+            self.analysed_newspapers = self.custom_settings['ANAYLISED_NEWSPAPERS']
 
         if test_url is None:
             self.newspaper_urls = [self.newspapers[name] for name in self.analysed_newspapers]
@@ -176,6 +181,7 @@ class NewspaperSpider(scrapy.Spider):
 
 if __name__ == "__main__":
     #scrapy crawl newspaper_ia -a test_url=http://web.archive.org/web/20090418200017/http://diepresse.com/ http://web.archive.org/web/20090514085159/http://www.elpais.com/ http://web.archive.org/web/20100106112048/http://www.sueddeutsche.de/ http://web.archive.org/web/20100507075606/http://www.repubblica.it/
-    n = NewspaperSpider(test_url="http://web.archive.org/web/20050105074106/http://www.sueddeutsche.de/")
+    # n = NewspaperSpider(test_url="http://web.archive.org/web/20050105074106/http://www.sueddeutsche.de/")
+    n = NewspaperSpider(snapshot_interval=30, newspaper_list="clarin")
     n.start_requests()
     # print len(n.build_urls())
