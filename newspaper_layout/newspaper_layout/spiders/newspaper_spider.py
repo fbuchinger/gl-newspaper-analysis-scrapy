@@ -9,7 +9,8 @@ from scrapy_splash import SplashRequest
 
 lua_script = """
     function main(splash)
-         splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/master/src/layoutstats.js")
+         -- splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/master/src/layoutstats.js")
+        splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/font-metrics-by-area/src/layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
         splash:wait(0.5)
