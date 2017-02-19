@@ -13,14 +13,17 @@ lua_script = """
         splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/font-metrics-by-area/src/layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
-        splash:wait(0.5)
+        splash:wait(1)
 
-        ready_for_measurement = splash:jsfunc("function() { return window.layoutstats !== undefined }")
+        ready_for_measurement = splash:jsfunc([[function() {
+            var snapshotFrame = document.getElementById('replay_iframe');
+            return window.layoutstats !== undefined && snapshotFrame && snapshotFrame.contentDocument && snapshotFrame.contentDocument.readyState === 'complete';
+        }]])
 
         function wait_for(condition)
             local max_retries = 10
             while not condition() do
-                splash:wait(0.1)
+                splash:wait(0.5)
                 max_retries = max_retries - 1
                 if max_retries == 0 then break end
             end
@@ -29,11 +32,12 @@ lua_script = """
         local measure_layout = splash:jsfunc([[
             function measureLayout() {
                 try {
-                    var waybackInfo = document.getElementById('wm-ipp');
+                    var iframeDoc = document.getElementById('replay_iframe').contentDocument;
+                    var waybackInfo = iframeDoc.getElementById('wm-ipp');
                     if(waybackInfo){
                         waybackInfo.parentNode.removeChild(waybackInfo);
                     }
-                    var measurements = window.layoutstats(document.body);
+                    var measurements = window.layoutstats(iframeDoc.body);
                     measurements.snapshotURL = location.href;
                     measurements.ISOTimeStamp = (new Date).toISOString();
                     if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
@@ -44,7 +48,6 @@ lua_script = """
                     }
                 }
                 catch (err){
-                    //var jqlaDefined = (window.jQLA && jQLA.fn && jQLA.fn.jquery);
                     return {snapshotURL: location.href, error: err.message }
                 }
             }
@@ -116,7 +119,7 @@ class NewspaperSpider(scrapy.Spider):
         'lua_source': lua_script
     }
 
-    def __init__(self, snapshot_interval = '', test_url = None, *args, **kwargs):
+    def __init__(self, snapshot_interval = '', test_url = None, url_file = None, *args, **kwargs):
         super(NewspaperSpider, self).__init__(*args, **kwargs)
         self.snapshot_interval = safe_cast(snapshot_interval,int, self.custom_settings['DAYS_BETWEEN_SNAPSHOTS'])
         self.interval_days = timedelta(days = self.snapshot_interval)
@@ -136,6 +139,10 @@ class NewspaperSpider(scrapy.Spider):
             self.start_urls = self.build_urls()
         else:
             self.start_urls = [test_url]
+
+        if url_file:
+            with open(url_file, 'r') as f:
+                self.start_urls = f.read().splitlines()
 
     def build_urls (self):
         def perdelta(start, end, delta):
@@ -175,7 +182,9 @@ class NewspaperSpider(scrapy.Spider):
         #    f.write(png_bytes)
         #inspect_response(response, self)
         #print result
+        self.logger.info('Parse function called on %s', response.url)
         result = json.loads(response.body)
+        self.logger.info('JSON response: %s', response.body)
         result['requested_url'] = response.url
 
         yield result
