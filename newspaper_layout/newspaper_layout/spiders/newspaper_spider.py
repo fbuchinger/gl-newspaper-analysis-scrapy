@@ -10,7 +10,8 @@ from scrapy_splash import SplashRequest
 lua_script = """
     function main(splash)
          -- splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/master/src/layoutstats.js")
-        splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/font-metrics-by-area/src/layoutstats.js")
+        -- splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/font-metrics-by-area/src/layoutstats.js")
+        splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/css-classlist/src/layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
         splash:wait(1)
@@ -115,7 +116,7 @@ class NewspaperSpider(scrapy.Spider):
         'width': 600,
         'render_all': 1,
         'wait': 10,
-        'timeout': 600,
+        'timeout': 180,
         'lua_source': lua_script
     }
 
