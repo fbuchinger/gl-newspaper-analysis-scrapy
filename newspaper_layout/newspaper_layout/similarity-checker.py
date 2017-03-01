@@ -12,20 +12,20 @@ def read_csv(filename):
     csv_data = csv.DictReader(open(filename, "r"), delimiter=",")
     return sorted(csv_data, key=lambda row: row['requested_url'], reverse=False)
 
-def calculate_similarity(csv_data, column):
+def jaccard (list1, list2):
+    union = list(set(list1) | set(list2))
+    intersection = list(set(list1) & set(list1))
+    jaccard = float(len(intersection)) / float(len(union))
+    return jaccard
+
+def calculate_similarity(csv_data, column, similarity_metric):
     similarity_csv = []
     for index, snapshot in enumerate(csv_data):
         if index > 0:
             previous = csv_data[index - 1]
             previousClassList = previous[column].split(',')
             currentClassList = snapshot[column].split(',')
-            union = list(set(previousClassList) | set(currentClassList))
-            intersection = list(set(previousClassList) & set(currentClassList))
-            jaccard_index = float(len(intersection))/float(len(union))
-            snapshot[column + 'Similarity'] = jaccard_index
-            logging.info(previousClassList)
-            logging.info(currentClassList)
-            print("Similarity between %s and %s: %s" % (previous['snapshotURL'],snapshot['snapshotURL'], jaccard_index))
+            snapshot[column + 'Similarity'] = similarity_metric (previousClassList, currentClassList)
         else:
             snapshot[column + 'Similarity'] = -1
 
@@ -47,6 +47,6 @@ if __name__ == "__main__":
 
     in_file = sys.argv[1]
     csv_data = read_csv(in_file)
-    similarity_csv = calculate_similarity(csv_data, 'nodeUsedCSSClassAttributesList')
+    similarity_csv = calculate_similarity(csv_data, 'nodeUsedCSSClassAttributesList', jaccard)
     out_file = os.path.splitext(in_file)[0] + '_similarity.csv'
     write_csv(out_file, similarity_csv)
