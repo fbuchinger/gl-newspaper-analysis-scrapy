@@ -187,8 +187,10 @@ class NewspaperSpider(scrapy.Spider):
         result = json.loads(response.body)
         self.logger.info('JSON response: %s', response.body)
         result['requested_url'] = response.url
-
-        yield result
+        if 'error' in result:
+            yield SplashRequest(response.url, self.parse_result, endpoint='execute', args=NewspaperSpider.splash_args,  dont_filter=True)
+        else:
+            yield result
 
 if __name__ == "__main__":
     #scrapy crawl newspaper_ia -a test_url=http://web.archive.org/web/20090418200017/http://diepresse.com/ http://web.archive.org/web/20090514085159/http://www.elpais.com/ http://web.archive.org/web/20100106112048/http://www.sueddeutsche.de/ http://web.archive.org/web/20100507075606/http://www.repubblica.it/
