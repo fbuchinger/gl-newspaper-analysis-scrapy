@@ -9,16 +9,13 @@ from scrapy_splash import SplashRequest
 
 lua_script = """
     function main(splash)
-         -- splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/master/src/layoutstats.js")
-        -- splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/font-metrics-by-area/src/layoutstats.js")
         splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/css-classlist/src/layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
         splash:wait(1)
 
         ready_for_measurement = splash:jsfunc([[function() {
-            var snapshotFrame = document.getElementById('replay_iframe');
-            return window.layoutstats !== undefined && snapshotFrame && snapshotFrame.contentDocument && snapshotFrame.contentDocument.readyState === 'complete';
+            return window.layoutstats !== undefined;
         }]])
 
         function wait_for(condition)
@@ -33,12 +30,11 @@ lua_script = """
         local measure_layout = splash:jsfunc([[
             function measureLayout() {
                 try {
-                    var iframeDoc = document.getElementById('replay_iframe').contentDocument;
-                    var waybackInfo = iframeDoc.getElementById('wm-ipp');
+                    var waybackInfo = document.getElementById('wm-ipp');
                     if(waybackInfo){
                         waybackInfo.parentNode.removeChild(waybackInfo);
                     }
-                    var measurements = window.layoutstats(iframeDoc.body);
+                    var measurements = window.layoutstats(document.body);
                     measurements.snapshotURL = location.href;
                     measurements.ISOTimeStamp = (new Date).toISOString();
                     if (measurements.textVisibleCharCount && measurements.textVisibleCharCount > 0) {
