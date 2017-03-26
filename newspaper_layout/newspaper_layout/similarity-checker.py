@@ -14,6 +14,9 @@ from collections import defaultdict
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("similarity-checker")
 
+#exclude these columns in CSV output - TODO: make this configuratble via CLI
+EXCLUDE_COLUMNS = ['ISOTimeStamp', 'newspaper', 'nodeUsedCSSClassAttributesList', 'requested_url']
+
 def read_csv(filename):
     csv_data = csv.DictReader(open(filename, "r"), delimiter=",")
     return sorted(csv_data, key=lambda row: row['requested_url'], reverse=False)
@@ -64,7 +67,11 @@ def calculate_similarity(csv_data, column, similarity_metric):
 
 def write_csv (filename, csv_data):
     file_obj = open(filename,"w")
-    writer = csv.DictWriter(file_obj, fieldnames=csv_data[0].keys())
+    fieldnames = sorted(csv_data[0].keys())
+    fieldnames = [field for field in fieldnames if field not in EXCLUDE_COLUMNS]
+    fieldnames.insert(0, fieldnames.pop(fieldnames.index('snapshotURL')))
+    fieldnames.insert(0, fieldnames.pop(fieldnames.index('snapshot_date')))
+    writer = csv.DictWriter(file_obj, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
     writer.writerows(csv_data)
 
@@ -106,6 +113,14 @@ if __name__ == "__main__":
         difference_url = similarity_csv[index].get('snapshotURL')
         previous_url = similarity_csv[index -1].get('snapshotURL')
         dissimilar_urls.append(difference_url)
+
+    #add a new column to indicuate 2 or Dissimilar values
+    for row_index, row in enumerate(similarity_csv):
+        if row_index in min_2_dissimilar:
+            similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = 'yes  (%s)' % dis_sim_count[row_index];
+        else:
+            similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = ''
+
 
     screenshot_file = os.path.splitext(in_file)[0] + '_difference_screenshots.txt'
     screenshot_f = open(screenshot_file,"w")
