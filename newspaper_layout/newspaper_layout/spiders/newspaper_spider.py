@@ -9,7 +9,7 @@ from scrapy_splash import SplashRequest
 
 lua_script = """
     function main(splash)
-        splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/css-classlist/src/layoutstats.js")
+        splash:autoload("https://rawgit.com/fbuchinger/jquery.layoutstats/prototype.js-crashes-layoutstats/src/layoutstats.js")
         splash:wait(0.5)
         splash:go(splash.args.url)
         splash:wait(1)
@@ -34,6 +34,12 @@ lua_script = """
                     if(waybackInfo){
                         waybackInfo.parentNode.removeChild(waybackInfo);
                     }
+
+                    //Prototype.js expects an each function on a NodeList
+
+                        NodeList.prototype.each = NodeList.prototype.forEach;
+
+
                     var measurements = window.layoutstats(document.body);
                     measurements.snapshotURL = location.href;
                     measurements.ISOTimeStamp = (new Date).toISOString();
@@ -183,7 +189,7 @@ class NewspaperSpider(scrapy.Spider):
         result = json.loads(response.body)
         self.logger.info('JSON response: %s', response.body)
         result['requested_url'] = response.url
-        if 'error' in result:
+        if 'error' in result and ("undefined is not a function" not in result['error']):
             yield SplashRequest(response.url, self.parse_result, endpoint='execute', args=NewspaperSpider.splash_args,  dont_filter=True)
         else:
             yield result
