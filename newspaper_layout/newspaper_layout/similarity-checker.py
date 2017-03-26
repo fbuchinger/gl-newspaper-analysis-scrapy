@@ -107,7 +107,7 @@ if __name__ == "__main__":
         previous_url = similarity_csv[index -1].get('snapshotURL')
         dissimilar_urls.append(difference_url)
 
-    screenshot_file = os.path.split(in_file)[0] + os.path.sep + 'difference_screenshots.txt'
+    screenshot_file = os.path.splitext(in_file)[0] + '_difference_screenshots.txt'
     screenshot_f = open(screenshot_file,"w")
     for url in dissimilar_urls:
         screenshot_f.write("%s \n" % url)
