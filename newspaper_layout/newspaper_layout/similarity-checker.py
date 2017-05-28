@@ -43,11 +43,13 @@ def parse_cell_value(csv_row, column_name):
         return csv_row[column_name].split(',')
     else:
         col_data = csv_row[column_name]
-        return ast.literal_eval(col_data.replace('u"','u').replace('":',':'))
+        #.replace('u"','u').replace('":',':')
+        return ast.literal_eval(col_data)
 
 def calculate_similarity(csv_data, column, similarity_metric):
     similarity_csv = []
     similarity_values = []
+    similarity_key = '_%sSimilarity' % column
     for index, snapshot in enumerate(csv_data):
         if index > 0:
             try:
@@ -55,12 +57,12 @@ def calculate_similarity(csv_data, column, similarity_metric):
                 previousValue = parse_cell_value(previous, column)
                 currentValue = parse_cell_value(snapshot, column)
                 similarity = similarity_metric (previousValue, currentValue)
-                snapshot[column + 'Similarity'] = similarity
+                snapshot[similarity_key] = similarity
                 similarity_values.append(similarity)
             except:
-                snapshot[column + 'Similarity'] = -1
+                snapshot[similarity_key] = -1
         else:
-            snapshot[column + 'Similarity'] = -1
+            snapshot[similarity_key] = -1
 
     similarity_csv.append(snapshot)
     return (csv_data, similarity_values)
@@ -97,9 +99,10 @@ if __name__ == "__main__":
     (similarity_csv, fontSimilarity) = calculate_similarity(similarity_csv, 'textUniqueFonts', euclidian)
     (similarity_csv, imageDimSimilarity) = calculate_similarity(similarity_csv, 'imageUniqueDimensionss', euclidian)
     (similarity_csv, fontSizeSimilarity) = calculate_similarity(similarity_csv, 'textUniqueFontSizes', euclidian)
+    (similarity_csv, fontStyleSimilarity) = calculate_similarity(similarity_csv, 'textUniqueFontStyles', jaccard)
 
     # find out all snapshot urls with more than 1 significant dissimilarity
-    all_sims = [cssSimilarity,fontSimilarity, imageDimSimilarity,fontSizeSimilarity]
+    all_sims = [cssSimilarity,fontSimilarity, imageDimSimilarity,fontSizeSimilarity, fontStyleSimilarity]
     dis_sim_count = defaultdict(int)
     for sim in all_sims:
         dis_sims = get_significant_dissimilarities(sim)
@@ -116,8 +119,9 @@ if __name__ == "__main__":
 
     #add a new column to indicuate 2 or Dissimilar values
     for row_index, row in enumerate(similarity_csv):
-        if row_index in min_2_dissimilar:
-            similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = 'yes  (%s)' % dis_sim_count[row_index];
+        sim_index = row_index - 1 # we didn't calculate similarity values for the first csv row -> sim_index is 1 less than csv index
+        if sim_index in min_2_dissimilar:
+            similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = 'yes  (%s)' % dis_sim_count[sim_index];
         else:
             similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = ''
 
