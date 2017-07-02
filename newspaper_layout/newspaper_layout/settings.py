@@ -14,7 +14,7 @@ BOT_NAME = 'newspaper_layout'
 SPIDER_MODULES = ['newspaper_layout.spiders']
 NEWSPIDER_MODULE = 'newspaper_layout.spiders'
 
-SPLASH_URL = 'http://192.168.99.100:8050'
+SPLASH_URL = 'http://127.0.0.1:8050'
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36"
 
 
@@ -25,9 +25,9 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, lik
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 2
+CONCURRENT_REQUESTS = 8
 #timeout for downloads/responses
-DOWNLOAD_TIMEOUT = 180
+DOWNLOAD_TIMEOUT = 360
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
@@ -35,7 +35,7 @@ DOWNLOAD_TIMEOUT = 180
 #DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 CONCURRENT_REQUESTS_PER_DOMAIN = 8
-#CONCURRENT_REQUESTS_PER_IP = 16
+CONCURRENT_REQUESTS_PER_IP = 8
 
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False

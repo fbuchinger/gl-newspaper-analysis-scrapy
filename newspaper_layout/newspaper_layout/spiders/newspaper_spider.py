@@ -118,7 +118,7 @@ class NewspaperSpider(scrapy.Spider):
         'width': 600,
         'render_all': 1,
         'wait': 10,
-        'timeout': 180,
+        'timeout': 360,
         'lua_source': lua_script
     }
 
@@ -145,6 +145,7 @@ class NewspaperSpider(scrapy.Spider):
 
         if url_file:
             with open(url_file, 'r') as f:
+                # TODO: make host IP Address configurable
                 self.start_urls = f.read().splitlines()
 
     def build_urls (self):

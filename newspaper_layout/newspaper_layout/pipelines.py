@@ -12,7 +12,7 @@ from items import NewspaperItem
 
 class NewspaperLayoutPipeline(object):
     def process_item(self, item, spider):
-        if item.has_key('error'):
+        if item.has_key('error') or (item.has_key('textFirst1000Chars') and 'Got an HTTP' in item['textFirst1000Chars']):
             raise DropItem("Error capturing item %s" % item)
         else:
             #try to set the snapshot date
