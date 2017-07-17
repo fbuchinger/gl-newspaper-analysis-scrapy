@@ -1,7 +1,7 @@
 import os
 
-snapshot_url_dir = r"../snapshot-urls"
-report_dir = r"../reports"
+snapshot_url_dir = r"../snapshot-urls/2007-2017"
+report_dir = r"../reports/2007-2017"
 
 
 def build_filepath(dir, filename, extension='', build_abspath = True):
