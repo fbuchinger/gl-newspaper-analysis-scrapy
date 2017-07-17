@@ -74,6 +74,7 @@ class NewspaperSpider(scrapy.Spider):
 
     custom_settings = {
         'IA_BASEURL': 'http://web.archive.org/web',
+        'PYWB_COLLECTION_URL': 'http://192.168.0.19:8080/test',
         'DAYS_BETWEEN_SNAPSHOTS': 30,
         'START_DATE': '2005-01-01',
         'END_DATE': '2015-01-01',
@@ -144,9 +145,10 @@ class NewspaperSpider(scrapy.Spider):
             self.start_urls = [test_url]
 
         if url_file:
+            self.start_urls = []
             with open(url_file, 'r') as f:
-                # TODO: make host IP Address configurable
-                self.start_urls = f.read().splitlines()
+                 for start_url in f.read().splitlines():
+                    self.start_urls.append(start_url.replace('{PYWB_COLLECTION_URL}', self.custom_settings['PYWB_COLLECTION_URL']))
 
     def build_urls (self):
         def perdelta(start, end, delta):
