@@ -7,6 +7,7 @@ import ast
 import math
 import numpy as np
 from collections import defaultdict
+from sklearn.cluster import KMeans
 
 # logger = logging.getLogger('similarity-checker')
 # logger.setLevel(logging.INFO)
@@ -36,7 +37,7 @@ def euclidian(dict1, dict2):
     dict1 = normalize_dict(dict1)
     dict2 = normalize_dict(dict2)
     euclidian = math.sqrt(sum((dict1.get(d, 0) - dict2.get(d, 0)) ** 2 for d in set(dict1).union(set(dict2))))
-    return 1 - euclidian #the closer the values, the more similar
+    return abs(1 - euclidian) #the closer the values, the more similar
 
 def parse_cell_value(csv_row, column_name):
     if column_name.endswith("List"):
@@ -102,13 +103,26 @@ if __name__ == "__main__":
     (similarity_csv, fontStyleSimilarity) = calculate_similarity(similarity_csv, 'textUniqueFontStyles', jaccard)
 
     # find out all snapshot urls with more than 1 significant dissimilarity
-    all_sims = [cssSimilarity,fontSimilarity, imageDimSimilarity,fontSizeSimilarity, fontStyleSimilarity]
+    all_sims = [cssSimilarity,fontSimilarity, imageDimSimilarity, fontSizeSimilarity, fontStyleSimilarity]
     dis_sim_count = defaultdict(int)
     for sim in all_sims:
         dis_sims = get_significant_dissimilarities(sim)
         for dis_sim in dis_sims:
             dis_sim_count[dis_sim[0]] += 1
 
+    #clustering
+    cluster_data = []
+    for i, val in enumerate(all_sims[0]):
+        cluster_data.append((all_sims[0][i],all_sims[1][i], all_sims[2][i], all_sims[3][i], all_sims[4][i]))
+    X = np.array(cluster_data)
+    print X.shape
+    kmeans = KMeans(n_clusters=2)
+    kmeans.fit(X)
+    labels = list(kmeans.labels_)
+    labels.insert(0, -1) # label for first snapshot = -1
+
+    for index, snapshot in enumerate(similarity_csv):
+        similarity_csv[index]['_similarityCluster'] = labels[index]
 
     min_2_dissimilar = [pos for pos, count in dis_sim_count.items() if count > 1]
     dissimilar_urls = []
