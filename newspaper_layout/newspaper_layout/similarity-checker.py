@@ -103,17 +103,25 @@ if __name__ == "__main__":
     (similarity_csv, fontStyleSimilarity) = calculate_similarity(similarity_csv, 'textUniqueFontStyles', jaccard)
 
     # find out all snapshot urls with more than 1 significant dissimilarity
-    all_sims = [cssSimilarity,fontSimilarity, imageDimSimilarity, fontSizeSimilarity, fontStyleSimilarity]
-    dis_sim_count = defaultdict(int)
-    for sim in all_sims:
+    all_sims = {
+        'css': cssSimilarity,
+        'font': fontSimilarity,
+        'imageDims':imageDimSimilarity,
+        'fontSize': fontSizeSimilarity,
+        'fontStyle': fontStyleSimilarity
+    }
+
+    dis_sim_count = defaultdict(list)
+    for sim_name, sim in all_sims.items():
         dis_sims = get_significant_dissimilarities(sim)
         for dis_sim in dis_sims:
-            dis_sim_count[dis_sim[0]] += 1
+            dis_sim_count[dis_sim[0]].append(sim_name)
 
     #clustering
     cluster_data = []
-    for i, val in enumerate(all_sims[0]):
-        cluster_data.append((all_sims[0][i],all_sims[1][i], all_sims[2][i], all_sims[3][i], all_sims[4][i]))
+    all_sims_values = all_sims.values();
+    for i, val in enumerate(all_sims_values[0]):
+        cluster_data.append((all_sims_values[0][i],all_sims_values[1][i], all_sims_values[2][i], all_sims_values[3][i], all_sims_values[4][i]))
     X = np.array(cluster_data)
     print X.shape
     kmeans = KMeans(n_clusters=2)
@@ -124,7 +132,7 @@ if __name__ == "__main__":
     for index, snapshot in enumerate(similarity_csv):
         similarity_csv[index]['_similarityCluster'] = labels[index]
 
-    min_2_dissimilar = [pos for pos, count in dis_sim_count.items() if count > 1]
+    min_2_dissimilar = [pos for pos, count in dis_sim_count.items() if len(count) > 1]
     dissimilar_urls = []
     for index in min_2_dissimilar:
         difference_url = similarity_csv[index].get('snapshotURL')
@@ -135,7 +143,9 @@ if __name__ == "__main__":
     for row_index, row in enumerate(similarity_csv):
         sim_index = row_index - 1 # we didn't calculate similarity values for the first csv row -> sim_index is 1 less than csv index
         if sim_index in min_2_dissimilar:
-            similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = 'yes  (%s)' % dis_sim_count[sim_index];
+            dis_sims = dis_sim_count[sim_index]
+            dis_sims.sort()
+            similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = 'yes  (%s - %s)' % (len(dis_sims), ', '.join(dis_sims));
         else:
             similarity_csv[row_index]['Low Similarity in more than 2 Values?'] = ''
 
