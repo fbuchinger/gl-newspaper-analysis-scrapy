@@ -94,7 +94,6 @@ def create_change_timeline (changes_xlsx_path):
                                         ("Medium","@newspaper"),
                                         ("Impact","@Impact"),
                                         ("Description","@Description"),
-
                                        ]))
 
     dot.legend.location = "top_left"
